@@ -1,0 +1,37 @@
+{
+  "name": "AdMeta",
+  "version": "0.0.1",
+  "description": "A privacy-preserving Ad Platform in Metaverse",
+  "homepage_url": "https://admeta.network/",
+  "manifest_version": 2,
+  "icons": {
+    "16": "assets/16.png",
+    "48": "assets/48.png",
+    "128": "assets/128.png"
+  },
+  "background": {
+    "scripts": [
+      "background/index.ts"
+    ]
+  },
+  "browser_action": {
+    "browser_style": false,
+    "default_icon": {
+      "16": "assets/16.png",
+      "48": "assets/48.png"
+    },
+    "default_title": "AdMeta",
+    "default_popup": "popup/popup.html"
+  },
+  "permissions": [
+    "storage",
+    "tabs",
+    "<all_urls>",
+    "clipboardRead",
+    "bookmarks",
+    "downloads",
+    "webRequest",
+    "webRequestBlocking"
+  ],
+  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self';"
+}
