@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "run:chromium": "web-ext run -t chromium --source-dir dist",
+    "run:firefox": "web-ext run -t firefox-desktop --source-dir dist"
   },
   "dependencies": {
     "react": "^18.2.0",
@@ -20,6 +22,7 @@
     "@vitejs/plugin-react": "^2.0.1",
     "typescript": "^4.6.4",
     "vite": "^3.0.7",
-    "vite-plugin-web-extension": "^1.4.4"
+    "vite-plugin-web-extension": "^1.4.4",
+    "web-ext": "^7.2.0"
   }
 }
