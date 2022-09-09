@@ -142,7 +142,10 @@ class Background {
             const u = this.splitUrl(activeTab[0].url || '')
             this.saveScanDomain(u || '')
             this.updateScanDomain()
-            if (!this.domain.domain.includes(u || 'null')) {
+            // TODO ad push card show time
+            const p = new URL(activeTab[0].url!)
+            
+            if (this.domain.domain.includes(p.hostname)) {
               const timer = setTimeout(() => {
                 Messenger.sendMessageToContentScript(
                   activeTab[0].id || 0,
