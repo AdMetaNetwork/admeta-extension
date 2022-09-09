@@ -1,0 +1,10 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+.admeta-popup {
+  width: 374px;
+  background: #18191d;
+  border-radius: 0px 0px 2px 2px;
+}

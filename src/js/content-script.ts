@@ -1,8 +1,7 @@
 import browser from 'webextension-polyfill'
 import Messenger from "./messenger";
-import { ADMETA_MSG_ACCOUNT, ADMETA_MSG_AD_PUSH } from './config'
+import { ADMETA_MSG_ACCOUNT, ADMETA_MSG_AD_PUSH, ADMETA_MSG_DOMAIN } from './config'
 import { pushAdCard } from './ui'
-
 class ContentScript {
 
   listenForMessages() {
@@ -15,7 +14,7 @@ class ContentScript {
   handleDealMessages(type: string, data: any) {
     switch (type) {
       case ADMETA_MSG_AD_PUSH:
-        pushAdCard()
+        pushAdCard('PICTURE', 'https://admeta.network/', 'https://test-1256754106.cos.ap-nanjing.myqcloud.com/%E6%A8%AA%E7%89%88%E6%B5%B7%E6%8A%A5.png')
         break;
     
       default:
@@ -25,9 +24,7 @@ class ContentScript {
 
   listenWebPageMessages() {
     window.addEventListener("message", async function (msg) {
-      if (msg.data.type === ADMETA_MSG_ACCOUNT) {
-        Messenger.sendMessageToBackground(msg.data.type, msg.data.data)
-      }
+      Messenger.sendMessageToBackground(msg.data.type, msg.data.data)
     })
   }
 

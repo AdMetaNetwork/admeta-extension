@@ -1,22 +1,29 @@
 import ReactDOM from 'react-dom';
 import { FC, useEffect, useState } from "react";
+import Start from '../components/start/index'
+import Home from '../components/home';
 import browser from 'webextension-polyfill'
 
+import './index.css'
+
 const Popup: FC = () => {
-  const [account, setAccount] = useState('')
-  const [balance, setBalance] = useState('')
+  const [isFirstInstall, setFirstInstall] = useState(true)
 
   useEffect(() => {
-    browser.storage.local.get(['account', 'balance']).then(({account, balance}) => {
-      setAccount(account)
-      setBalance(balance)
-    });
-  }, [])
+    browser.storage.local.get(['first_install']).then(({ first_install }) => {
+      setFirstInstall(!!!first_install)
+    }); 
+  })
 
   return (
-    <div>
-      <div>account: {account}</div>
-      <div>balance: {balance} <strong style={{color: '#fec400'}}>AMD</strong></div>
+    <div className='admeta-popup'>
+      {
+        isFirstInstall
+          ?
+          <Start />
+          :
+          <Home />
+      }
     </div>
   )
 }

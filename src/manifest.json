@@ -9,7 +9,6 @@
     "48": "assets/48.png",
     "128": "assets/128.png"
   },
-  "background_page": "popup/background.html",
   "background": {
     "scripts": [
       "js/background.ts"
@@ -39,6 +38,8 @@
     "tabs",
     "<all_urls>",
     "webRequest",
-    "webRequestBlocking"
+    "webRequestBlocking",
+    "clipboardRead",
+    "clipboardWrite"
   ]
 }
