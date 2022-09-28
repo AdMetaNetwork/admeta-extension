@@ -164,11 +164,13 @@ class Background {
             
             if (this.domain.domain.includes(p.hostname)) {
               const m = Math.random() >= 0.5 ? this.advertisements[0] : this.advertisements[1]
-              const timer = setTimeout(() => {
+              const timer = setTimeout(async () => {
+                const { account }= await browser.storage.local.get(['account'])
+
                 Messenger.sendMessageToContentScript(
                   activeTab[0].id || 0,
                   ADMETA_MSG_AD_PUSH,
-                  { message: m, address: this.account.account }
+                  { message: m, address: account }
                 );
                 clearTimeout(timer)
               }, 8000)
@@ -194,13 +196,21 @@ class Background {
 
   listenTabUpdate() {
     browser.tabs.onUpdated.addListener(
-       (tabId, changeInfo, tab) => {
-        if (this.getBroswerSearch(tab.url || '') === 'admeta') {
-          const m = Math.random() >= 0.5 ? this.advertisements[0] : this.advertisements[1]
+       async (tabId, changeInfo, tab) => {
+        const { account } = await browser.storage.local.get(['account'])
+        const q = this.getBroswerSearch(tab.url || '')
+        if (q === 'admeta') {
           Messenger.sendMessageToContentScript(
             tabId,
             ADMETA_MSG_AD_PUSH,
-            { message: m, address: this.account.account }
+            { message: this.advertisements[0], address: account }
+          );
+        }
+        if (q === 'nansen' || q === 'web3go') {
+          Messenger.sendMessageToContentScript(
+            tabId,
+            ADMETA_MSG_AD_PUSH,
+            { message: this.advertisements[1], address: account }
           );
         }
       }
