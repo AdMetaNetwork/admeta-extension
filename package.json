@@ -1,5 +1,5 @@
 {
-  "name": "my-vite-app",
+  "name": "admeta",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -35,7 +35,7 @@
     "url": "git+https://github.com/AdMetaNetwork/extension.git"
   },
   "keywords": [],
-  "author": "",
+  "author": "admeta network",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/AdMetaNetwork/extension/issues"

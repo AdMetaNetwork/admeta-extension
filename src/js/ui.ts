@@ -1,8 +1,8 @@
-import { POW_IMG_BASE64, CLOSE_IMG_BASE64, PLAY_ICON_BASE64 } from './config'
+import { POW_IMG_BASE64, CLOSE_IMG_BASE64, PLAY_ICON_BASE64, LINK_HTTP } from './config'
 
 // https://storageapi.fleek.co/038f3525-c411-4ef9-86e4-bc833d0c2d7f-bucket/IMG_8428.JPG
 
-export const pushAdCard = (type: 'PICTURE' | 'VIDEO', link: string, imgUrl: string) => {
+export const pushAdCard = (type: 'PICTURE' | 'VIDEO', link: string, imgUrl: string, id: string, address: string) => {
   const ui = document.createElement('div')
   const style = 'position: fixed; width: 508px; height: 343px; top: 80px; right: 80px; background: #18191D; z-index: 9999; border: 1px solid rgba(53, 57, 69, 0.5); border-radius: 20px; padding: 24px; box-sizing: border-box;'
   ui.setAttribute('style', style)
@@ -14,7 +14,11 @@ export const pushAdCard = (type: 'PICTURE' | 'VIDEO', link: string, imgUrl: stri
   ui.appendChild(img)
 
   img.addEventListener('click', () => {
-    window.open(link)
+    if (type === 'VIDEO') {
+      window.open(`${LINK_HTTP}play?video=${encodeURIComponent(link)}&id=${id}&add=${address}`)
+    } else {
+      window.open(`${link}?id=${id}&add=${address}`)
+    }
   })
 
   const play = document.createElement('div')
@@ -23,6 +27,10 @@ export const pushAdCard = (type: 'PICTURE' | 'VIDEO', link: string, imgUrl: stri
   if (type === 'VIDEO') {
     ui.appendChild(play)
   }
+
+  play.addEventListener('click', () => {
+    window.open(`${LINK_HTTP}play?video=${encodeURIComponent(link)}&id=${id}&add=${address}`)
+  })
 
   const footer = document.createElement('div')
   const footerStyle = 'width: 100%; height: 36px; padding: 0 24px; box-sizing: border-box; display: flex; align-items: center; justify-content: flex-end; position: absolute; bottom: 0; right: 0;'

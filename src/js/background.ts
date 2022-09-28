@@ -18,6 +18,9 @@ class Background {
   // scan_list
   private scanList: ScanDomain[] = []
 
+  // ad list
+  private advertisements: Record<string, any>[] = []
+
   constructor() {}
 
   listenForMessages() {
@@ -62,6 +65,7 @@ class Background {
   }
 
   saveScanDomain(domain: string) {
+    console.log(domain, 'domain')
     if (!domain) {
       return
     }
@@ -72,21 +76,21 @@ class Background {
       time,
       domain
     })
-
+    console.log(scanDomain)
     this.scanList = scanDomain;
   }
 
   getConfig() {
     const that = this;
-      Helper.apiCall({
-        URI: DOMAIN_CONFIG_URL,
-        method: 'GET',
-        full_url: true,
-      }).then((v) => {
-        v.json().then((c) => {
-          that.config = c;
-        })
+    Helper.apiCall({
+      URI: DOMAIN_CONFIG_URL,
+      method: 'GET',
+      full_url: true,
+    }).then((v) => {
+      v.json().then((c) => {
+        that.config = c;
       })
+    })
   }
 
   updateScanDomain() {
@@ -133,11 +137,24 @@ class Background {
     return hostname
   }
 
+  getAdvertisements() {
+    Helper.apiCall({
+      URI: `admeta/getAdvertisements`, 
+      method: 'POST'
+    }).then((v) => {
+      v.json().then((c) => {
+        this.advertisements.push(c[c.length-1])
+        this.advertisements.push(c[c.length-2])
+      })
+    })
+  }
+
   listenTabChange() {
     browser.tabs.onActivated.addListener((l) => {
       browser.tabs
         .query({ active: true, currentWindow: true })
         .then((activeTab) => {
+          console.log(activeTab, this.extStatus)
           if (this.extStatus) {
             const u = this.splitUrl(activeTab[0].url || '')
             this.saveScanDomain(u || '')
@@ -146,11 +163,12 @@ class Background {
             const p = new URL(activeTab[0].url!)
             
             if (this.domain.domain.includes(p.hostname)) {
+              const m = Math.random() >= 0.5 ? this.advertisements[0] : this.advertisements[1]
               const timer = setTimeout(() => {
                 Messenger.sendMessageToContentScript(
                   activeTab[0].id || 0,
                   ADMETA_MSG_AD_PUSH,
-                  { message: "show Ad push" }
+                  { message: m, address: this.account.account }
                 );
                 clearTimeout(timer)
               }, 8000)
@@ -175,14 +193,14 @@ class Background {
   }
 
   listenTabUpdate() {
-    const that = this
     browser.tabs.onUpdated.addListener(
-      function (tabId, changeInfo, tab) {
-        if (that.getBroswerSearch(tab.url || '') === 'admeta') {
+       (tabId, changeInfo, tab) => {
+        if (this.getBroswerSearch(tab.url || '') === 'admeta') {
+          const m = Math.random() >= 0.5 ? this.advertisements[0] : this.advertisements[1]
           Messenger.sendMessageToContentScript(
             tabId,
             ADMETA_MSG_AD_PUSH,
-            { message: "show Ad push" }
+            { message: m, address: this.account.account }
           );
         }
       }
@@ -201,6 +219,9 @@ class Background {
 
     // Get domain config
     this.getConfig()
+
+    // Get getAdvertisements
+    this.getAdvertisements()
   }
 
 }

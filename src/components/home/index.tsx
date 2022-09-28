@@ -55,7 +55,7 @@ const Home: FC = () => {
       <div className="blance-wrp">
         <div className="t">Total Earnings</div>
         <div className="balance">
-          <div className="num">{(Number(balance) / Math.pow(10, 12)).toFixed(2)}</div>
+          <div className="num">{balance}</div>
           <div className="unit">AMD</div>
         </div>
       </div>
