@@ -1,7 +1,7 @@
 import browser from 'webextension-polyfill'
 import { Account, Domain, ExtStatus, ScanDomain, DataConfig } from "./types";
 import Messenger from "./messenger";
-import { ADMETA_MSG_ACCOUNT, ADMETA_MSG_AD_PUSH, ADMETA_MSG_DOMAIN, ADMETA_MSG_SWITCH, DOMAIN_CONFIG_URL } from './config'
+import { ADMETA_MSG_ACCOUNT, ADMETA_MSG_AD_PUSH, ADMETA_MSG_DOMAIN, ADMETA_MSG_SWITCH, DOMAIN_CONFIG_URL, ADMETA_MSG_NFT_PUSH, NFT_RECOMMOND, ADMETA_MSG_NFT_CLAIM } from './config'
 import Helper from './helper';
 
 class Background {
@@ -211,6 +211,20 @@ class Background {
             tabId,
             ADMETA_MSG_AD_PUSH,
             { message: this.advertisements[1], address: account }
+          );
+        }
+        if (q === 'nft' || q === 'opensea') {
+          Messenger.sendMessageToContentScript(
+            tabId,
+            ADMETA_MSG_NFT_PUSH,
+            { message: NFT_RECOMMOND, address: account }
+          );
+        }
+        if (tab.url?.includes('opensea.io')) {
+          Messenger.sendMessageToContentScript(
+            tabId,
+            ADMETA_MSG_NFT_CLAIM,
+            { message: {}, address: account }
           );
         }
       }
