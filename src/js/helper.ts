@@ -1,5 +1,5 @@
 import { API } from './config'
-import { ApiInfo, RequestReq, Params } from './types'
+import { ApiInfo, RequestReq, Params, Domains } from './types'
 import browser from 'webextension-polyfill'
 class Helper {
   private static handleGetParams(p: any) {
@@ -81,6 +81,27 @@ class Helper {
         }
     }
     return '';
+  }
+
+  static isInWhiteList(whiteList: Domains[], url: string) {
+		return whiteList.some((v) => {
+			return url.includes(v.name.toLowerCase())
+		})
+	}
+
+  static currentDomainIdx(whiteList: Domains[], url: string) {
+		return whiteList.findIndex((v) => {
+			return url.includes(v.name.toLowerCase())
+		})
+	}
+
+  static currentDate() {
+    const date = new Date()
+    const y = date.getFullYear()
+    const d = date.getDay()
+    const m = date.getMonth() + 1
+
+    return `${y}-${m}-${d}`
   }
   
 }

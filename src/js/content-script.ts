@@ -23,7 +23,7 @@ class ContentScript {
       return
     }
     Helper.apiCall({
-      URI: `https://api.etherscan.io/api`, 
+      URI: `https://api.etherscan.io/api`,
       full_url: true,
       method: 'GET',
       params: {
@@ -37,7 +37,7 @@ class ContentScript {
       }
     }).then((v) => {
       v.json().then((c) => {
-        const isHold = c.result.some((v:any) => {return v.tokenID === tokenID})
+        const isHold = c.result.some((v: any) => { return v.tokenID === tokenID })
         if (isHold) {
           pushClaimCard()
         }
@@ -57,7 +57,7 @@ class ContentScript {
       case ADMETA_MSG_NFT_CLAIM:
         this.getNftHold();
         break;
-    
+
       default:
         break;
     }

@@ -17,7 +17,13 @@ export type Account = {
 }
 
 export type Domain = {
-  domain: string[]
+  domain: string
+}
+
+export type Domains = {
+  category: string[],
+  name: string,
+  domain: string
 }
 
 export type ExtStatus = {

@@ -1,17 +1,20 @@
 import browser from 'webextension-polyfill'
-import { Account, Domain, ExtStatus, ScanDomain, DataConfig } from "./types";
+import { Account, Domain, ExtStatus, ScanDomain, DataConfig, Domains } from "./types";
 import Messenger from "./messenger";
-import { ADMETA_MSG_ACCOUNT, ADMETA_MSG_AD_PUSH, ADMETA_MSG_DOMAIN, ADMETA_MSG_SWITCH, DOMAIN_CONFIG_URL, ADMETA_MSG_NFT_PUSH, NFT_RECOMMOND, ADMETA_MSG_NFT_CLAIM } from './config'
+import { ADMETA_MSG_ACCOUNT, ADMETA_MSG_AD_PUSH, ADMETA_MSG_DOMAIN, ADMETA_MSG_SWITCH, DOMAIN_CONFIG_URL, ADMETA_MSG_NFT_PUSH, NFT_RECOMMOND, ADMETA_MSG_NFT_CLAIM, TEST_ACCOUNT, RPC, CONTRACT_ADDRESS, REPORTING_TIME, OPEN_TAB_NUMBER, ADMETA_MSG_EVM } from './config'
 import Helper from './helper';
+import { BigNumber, ethers } from 'ethers'
+import { abi } from "./abi";
+import WHITE_LIST from './white-list';
 
 class Background {
 
   // domain config
-  private config: DataConfig = default_config;
+  private config: DataConfig | undefined;
   // uesr account
-  private account: Account = default_account;
+  private account: Account | undefined;
   // user setting domains
-  private domain: Domain = default_domain;
+  private domain: Domain | undefined;
   // user setting ext switch
   private extStatus: boolean = true;
 
@@ -21,7 +24,43 @@ class Background {
   // ad list
   private advertisements: Record<string, any>[] = []
 
-  constructor() {}
+  // domain white list
+  private whiteList: Domains[] = WHITE_LIST.products
+
+  // contract
+  private contract: ethers.Contract | undefined
+
+  constructor() { }
+
+  initScore() {
+    browser.storage.local.set({
+      score: {
+        DeFi: 0,
+        GameFi: 0,
+        NFT: 0,
+        Metaverse: 0,
+        OnChainData: 0
+      }
+    })
+  }
+
+  initEVM() {
+    const provider = new ethers.providers.JsonRpcProvider(RPC);
+    // test call wallet
+    const w = ethers.Wallet.fromMnemonic(TEST_ACCOUNT);
+    const p = w.privateKey;
+    const wallet = new ethers.Wallet(p, provider);
+    const c = new ethers.Contract(CONTRACT_ADDRESS, abi, wallet);
+    this.contract = c.connect(wallet)
+  }
+
+  listenInstall() {
+    browser.runtime.onInstalled.addListener((message) => {
+      if (message.reason === 'install') {
+        this.initScore()
+      }
+    })
+  }
 
   listenForMessages() {
     browser.runtime.onMessage.addListener((message, sender) => {
@@ -43,14 +82,14 @@ class Background {
       case ADMETA_MSG_SWITCH:
         this.saveSwitchExt(data)
         break;
-    
+
       default:
         break;
     }
   }
 
   saveAccount(data: Account) {
-    browser.storage.local.set({ account: data.account, balance: data.balance})
+    browser.storage.local.set({ account: data.account, balance: data.balance })
     this.account = data
   }
 
@@ -70,8 +109,8 @@ class Background {
       return
     }
     const now = new Date().getTime() / 1000
-    let time = parseInt(now + '') 
-    let scanDomain:ScanDomain[] = this.scanList;
+    let time = parseInt(now + '')
+    let scanDomain: ScanDomain[] = this.scanList;
     scanDomain.push({
       time,
       domain
@@ -101,8 +140,8 @@ class Background {
       let prevD = list[list.length - 2].domain
       let currT = list[list.length - 1].time
       let name = ''
-      let category:string[] = []
-      config.products.forEach((item) => {
+      let category: string[] = []
+      config?.products.forEach((item) => {
         if (prevD === item.domain) {
           name = item.name
           category = item.category
@@ -110,10 +149,10 @@ class Background {
       })
       if (currT - prevT >= 10) {
         Helper.apiCall({
-          URI: `admeta/updateUserWeb3UsingInfo`, 
+          URI: `admeta/updateUserWeb3UsingInfo`,
           method: 'POST',
           params: {
-            walletAddress: this.account.account,
+            walletAddress: this.account?.account,
             name,
             domain: prevD,
             usingDuration: currT - prevT,
@@ -131,7 +170,7 @@ class Background {
       return
     }
     const { hostname } = new URL(url)
-    if (!this.domain.domain.includes(hostname)) {
+    if (!this.domain?.domain.includes(hostname)) {
       return
     }
     return hostname
@@ -139,15 +178,39 @@ class Background {
 
   getAdvertisements() {
     Helper.apiCall({
-      URI: `admeta/getAdvertisements`, 
+      URI: `admeta/getAdvertisements`,
       method: 'POST'
     }).then((v) => {
       v.json().then((c) => {
-        this.advertisements.push(c[c.length-1])
-        this.advertisements.push(c[c.length-2])
+        this.advertisements.push(c[c.length - 1])
+        this.advertisements.push(c[c.length - 2])
       })
     })
   }
+
+  private reportBroswer(tab: any) {
+    if (!this.whiteList.length) {
+      return
+    }
+    const isIn = Helper.isInWhiteList(this.whiteList, tab.url || '-1')
+    if (isIn) {
+      const idx = Helper.currentDomainIdx(this.whiteList, tab.url || '-1')
+      const timer = setTimeout(async () => {
+        clearTimeout(timer)
+
+        console.log('report', idx, this.whiteList[idx].category)
+        const categorys = this.whiteList[idx].category
+        const { score } = await browser.storage.local.get(['score'])
+        categorys.forEach((item) => {
+          score[item] += 50
+        })
+
+        console.log(categorys, score)
+        await browser.storage.local.set({ score: { ...score } })
+      }, REPORTING_TIME)
+    }
+  }
+
 
   listenTabChange() {
     browser.tabs.onActivated.addListener((l) => {
@@ -156,25 +219,7 @@ class Background {
         .then((activeTab) => {
           console.log(activeTab, this.extStatus)
           if (this.extStatus) {
-            const u = this.splitUrl(activeTab[0].url || '')
-            this.saveScanDomain(u || '')
-            this.updateScanDomain()
-            // TODO ad push card show time
-            const p = new URL(activeTab[0].url!)
-            
-            if (this.domain.domain.includes(p.hostname)) {
-              const m = Math.random() >= 0.5 ? this.advertisements[0] : this.advertisements[1]
-              const timer = setTimeout(async () => {
-                const { account }= await browser.storage.local.get(['account'])
-
-                Messenger.sendMessageToContentScript(
-                  activeTab[0].id || 0,
-                  ADMETA_MSG_AD_PUSH,
-                  { message: m, address: account }
-                );
-                clearTimeout(timer)
-              }, 8000)
-            }
+            this.reportBroswer(activeTab[0])
           }
         });
     });
@@ -194,44 +239,97 @@ class Background {
     return ''
   }
 
+  async searchKeyWordAd(tabId: number, tab: browser.Tabs.Tab) {
+    const { account } = await browser.storage.local.get(['account'])
+    const q = this.getBroswerSearch(tab.url || '')
+    if (q === 'admeta') {
+      Messenger.sendMessageToContentScript(
+        tabId,
+        ADMETA_MSG_AD_PUSH,
+        { message: this.advertisements[0], address: account }
+      );
+    }
+    if (q === 'nansen' || q === 'web3go') {
+      Messenger.sendMessageToContentScript(
+        tabId,
+        ADMETA_MSG_AD_PUSH,
+        { message: this.advertisements[1], address: account }
+      );
+    }
+    if (q === 'did' || q === 'litentry') {
+      this.callEVM(tabId, account)
+    }
+    if (q === 'nft' || q === 'opensea') {
+      Messenger.sendMessageToContentScript(
+        tabId,
+        ADMETA_MSG_NFT_PUSH,
+        { message: NFT_RECOMMOND, address: account }
+      );
+    }
+    if (tab.url?.includes('opensea.io')) {
+      Messenger.sendMessageToContentScript(
+        tabId,
+        ADMETA_MSG_NFT_CLAIM,
+        { message: {}, address: account }
+      );
+    }
+  }
+
+  async getTabLength(tab: browser.Tabs.Tab) {
+    browser.tabs.query({}).then((tabs) => {
+      console.log('tabs00----->>>>', tabs, tabs.length)
+      // default length is 8
+      if (tabs.length > OPEN_TAB_NUMBER && tab.id && tab.url && !tab.url.includes('chrome://')) {
+        this.pushAd(tab.id)
+      }
+    })
+  }
+
   listenTabUpdate() {
     browser.tabs.onUpdated.addListener(
-       async (tabId, changeInfo, tab) => {
-        const { account } = await browser.storage.local.get(['account'])
-        const q = this.getBroswerSearch(tab.url || '')
-        if (q === 'admeta') {
-          Messenger.sendMessageToContentScript(
-            tabId,
-            ADMETA_MSG_AD_PUSH,
-            { message: this.advertisements[0], address: account }
-          );
-        }
-        if (q === 'nansen' || q === 'web3go') {
-          Messenger.sendMessageToContentScript(
-            tabId,
-            ADMETA_MSG_AD_PUSH,
-            { message: this.advertisements[1], address: account }
-          );
-        }
-        if (q === 'nft' || q === 'opensea') {
-          Messenger.sendMessageToContentScript(
-            tabId,
-            ADMETA_MSG_NFT_PUSH,
-            { message: NFT_RECOMMOND, address: account }
-          );
-        }
-        if (tab.url?.includes('opensea.io')) {
-          Messenger.sendMessageToContentScript(
-            tabId,
-            ADMETA_MSG_NFT_CLAIM,
-            { message: {}, address: account }
-          );
+      async (tabId, changeInfo, tab) => {
+        if (changeInfo.status === 'complete') {
+          this.searchKeyWordAd(tabId, tab)
+          this.reportBroswer(tab)
+          this.getTabLength(tab)
         }
       }
     );
   }
 
+  async pushAd(tabId: number) {
+    const { pushDate, account } = await browser.storage.local.get(['pushDate', 'account'])
+    console.log(pushDate, 'pushDate-->>')
+    const d = Helper.currentDate()
+    if (pushDate === d) {
+      return
+    }
+    this.callEVM(tabId, account)
+  }
+
+  async callEVM(tabId: number, account: string) {
+    console.log('tabId=----->>>', tabId)
+    const idx = BigNumber.from(8)
+
+    this.contract?.adInfo(idx).then((b: any) => {
+      const message = {
+        callbackLink: b[6],
+        metadata: b[4],
+        id: b[0].toNumber(),
+        address: b[1]
+      }
+      Messenger.sendMessageToContentScript(
+        tabId,
+        ADMETA_MSG_AD_PUSH,
+        { message, address: account }
+      );
+      browser.storage.local.set({ pushDate: Helper.currentDate() })
+    })
+  }
+
   init() {
+    // Listen install
+    this.listenInstall()
     // Listen for messages from background and run the listener from the map
     this.listenForMessages();
 
@@ -246,23 +344,10 @@ class Background {
 
     // Get getAdvertisements
     this.getAdvertisements()
+
+    // init evm
+    this.initEVM()
   }
 
 }
-
-const default_config: DataConfig = {
-  searching_engines: [],
-  products: [],
-  categories: []
-}
-
-const default_account: Account = {
-  account: '',
-  balance: ''
-}
-
-const default_domain: Domain = {
-  domain: []
-}
-
 new Background().init();
