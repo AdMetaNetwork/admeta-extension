@@ -19,6 +19,7 @@ export const pushAdCard = (type: 'PICTURE' | 'VIDEO', link: string, imgUrl: stri
     } else {
       window.open(`${link}?id=${id}&add=${address}`)
     }
+    document.body.removeChild(ui)
   })
 
   const play = document.createElement('div')

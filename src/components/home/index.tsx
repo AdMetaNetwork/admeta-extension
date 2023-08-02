@@ -31,7 +31,12 @@ const Home: FC = () => {
         <Logo2 />
         <div className="network">
           <div className="status"></div>
-          <div className="net-name">Ethereum Mainet</div>
+          <div 
+            className="net-name"
+            onClick={() => {
+              browser.storage.local.set({ pushDate: '' })
+            }}
+          >Ethereum Sepolia</div>
         </div>
       </div>
       <div className="account-wrp">

@@ -12,6 +12,7 @@
     "run:firefox": "web-ext run -t firefox-desktop --source-dir dist"
   },
   "dependencies": {
+    "ethers": "^5.7.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
