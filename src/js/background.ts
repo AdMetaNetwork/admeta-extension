@@ -39,7 +39,9 @@ class Background {
         GameFi: 0,
         NFT: 0,
         Metaverse: 0,
-        OnChainData: 0
+        OnChainData: 0,
+        AI: 0,
+        DID: 0,
       }
     })
   }
@@ -249,15 +251,18 @@ class Background {
         { message: this.advertisements[0], address: account }
       );
     }
-    if (q === 'nansen' || q === 'web3go') {
+    if (q === 'nansen') {
       Messenger.sendMessageToContentScript(
         tabId,
         ADMETA_MSG_AD_PUSH,
         { message: this.advertisements[1], address: account }
       );
     }
+    if (q === 'web3go' || q === 'ai') {
+      this.callEVM(tabId)
+    }
     if (q === 'did' || q === 'litentry') {
-      this.callEVM(tabId, account)
+      this.callEVM(tabId)
     }
     if (q === 'nft' || q === 'opensea') {
       Messenger.sendMessageToContentScript(
@@ -304,14 +309,24 @@ class Background {
     if (pushDate === d) {
       return
     }
-    this.callEVM(tabId, account)
+    this.callEVM(tabId)
   }
 
-  async callEVM(tabId: number, account: string) {
-    console.log('tabId=----->>>', tabId)
-    const idx = BigNumber.from(8)
+  async callEVM(tabId: number) {
+    const { account } = await browser.storage.local.get(['account'])
+    console.log(account)
+    // get user tag score
+    const useScore = await this.contract?.getUserLevel(account)
+    console.log(JSON.parse(useScore.categoryScores))
+    const obj = JSON.parse(useScore.categoryScores)
+    if (obj.AI < 100) {
+      return
+    }
 
-    this.contract?.adInfo(idx).then((b: any) => {
+    const matchIndex = await this.contract?.matchAd(BigNumber.from(5), account)
+    console.log(matchIndex)
+
+    this.contract?.adInfo(matchIndex).then((b: any) => {
       const message = {
         callbackLink: b[6],
         metadata: b[4],

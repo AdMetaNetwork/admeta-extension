@@ -18,7 +18,7 @@ const Start: FC = () => {
         className="btn-wrp"
         onClick={() => {
           browser.storage.local.set({ first_install: true })
-          Helper.goWeb(LINK_HTTP)
+          Helper.checkOriginIsExist()
         }}
       >
         <div className="btn">Start</div>
