@@ -1,6 +1,6 @@
 import browser from 'webextension-polyfill'
 import Messenger from "./messenger";
-import { ADMETA_MSG_AD_PUSH, ADMETA_MSG_NFT_PUSH, ADMETA_MSG_NFT_CLAIM } from './config'
+import { ADMETA_MSG_AD_PUSH, ADMETA_MSG_NFT_PUSH, ADMETA_MSG_NFT_CLAIM, ADMETA_MSG_EXTENISON_CALL_ADDRESS, ADMETA_MSG_SYNCDATA_TO_CONTENT, ADMETA_MSG_ACCOUNT } from './config'
 import { pushAdCard, pushNftCard, pushClaimCard } from './ui'
 import Helper from './helper';
 class ContentScript {
@@ -46,6 +46,7 @@ class ContentScript {
   }
 
   handleDealMessages(type: string, data: any) {
+    console.log(data, type)
     switch (type) {
       case ADMETA_MSG_AD_PUSH:
         pushAdCard(data.message.callbackLink.includes('youtube') ? 'VIDEO' : 'PICTURE', data.message.callbackLink, data.message.metadata, data.message.id, data.address)
@@ -56,6 +57,27 @@ class ContentScript {
 
       case ADMETA_MSG_NFT_CLAIM:
         this.getNftHold();
+        break;
+
+      case ADMETA_MSG_SYNCDATA_TO_CONTENT:
+        const l = localStorage.getItem('sync_data')
+        console.log(data)
+        if (l) {
+          const d = JSON.stringify({ ...JSON.parse(l), ...data })
+          localStorage.setItem('sync_data', d)
+        } else {
+          localStorage.setItem('sync_data', JSON.stringify(data))
+        }
+        break;
+
+      case ADMETA_MSG_EXTENISON_CALL_ADDRESS:
+
+        const storage = localStorage.getItem('wagmi.store')
+        if (!storage) return
+        const obj = JSON.parse(storage)
+        const account = obj.state.data.account
+        console.log(account, 99889)
+        Messenger.sendMessageToBackground(ADMETA_MSG_ACCOUNT, { account, balance: 0 })
         break;
 
       default:

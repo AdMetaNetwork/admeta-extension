@@ -28,13 +28,13 @@ const WHITE_LIST = {
 			category: ['NFT']
 		},
 		{
-			name: 'IdentityHub',
-			domain: 'https://www.litentry.com/',
+			name: 'Litentry',
+			domain: 'litentry.com',
 			category: ['DID']
 		},
 		{
 			name: 'Web3Go',
-			domain: 'https://din.web3go.xyz/',
+			domain: 'din.web3go.xyz',
 			category: ['AI']
 		}
 	]

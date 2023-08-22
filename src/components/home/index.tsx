@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from "react";
+import { FC, useEffect, useState, useMemo } from "react";
 import browser from 'webextension-polyfill'
 import Helper from '../../js/helper';
 import Logo2 from "../svg/logo2";
@@ -8,9 +8,10 @@ import Setting from "../svg/setting";
 import Ext from "../svg/ext";
 import Github from "../svg/github";
 import Twitter from "../svg/twitter";
-import { LINK_HTTP } from "../../js/config";
+import { ADMETA_MSG_ACCOUNT, ADMETA_MSG_EXTENISON_CALL_ADDRESS, ADMETA_MSG_SYNCDATA_TO_CONTENT, LINK_HTTP } from "../../js/config";
 
 import './index.css'
+import Messenger from "../../js/messenger";
 
 const Home: FC = () => {
   const [isOpenExt, setOpenExt] = useState(true)
@@ -22,8 +23,33 @@ const Home: FC = () => {
       setOpenExt(ext_status)
       setAccount(account || '0x...')
       setBalance(balance || '0')
-    }); 
-  })
+    });
+  }, [])
+
+  useEffect(() => {
+    const syncData = async () => {
+      const { tabId } = await Helper.getOriginInfo()
+      if (!tabId) return
+      const { score } = await browser.storage.local.get(['score'])
+      console.log(tabId, score)
+
+      Messenger.sendMessageToContentScript(tabId, ADMETA_MSG_SYNCDATA_TO_CONTENT, score)
+      browser.storage.local.set({
+        score: {
+          DeFi: 0,
+          GameFi: 0,
+          NFT: 0,
+          Metaverse: 0,
+          OnChainData: 0,
+          AI: 0,
+          DID: 0,
+        }
+      })
+    }
+
+    syncData()
+
+  }, [])
 
   return (
     <div className="home-content">
@@ -31,7 +57,7 @@ const Home: FC = () => {
         <Logo2 />
         <div className="network">
           <div className="status"></div>
-          <div 
+          <div
             className="net-name"
             onClick={() => {
               browser.storage.local.set({ pushDate: '' })
@@ -42,7 +68,12 @@ const Home: FC = () => {
       <div className="account-wrp">
         <div className="left"></div>
         <div className="right">
-          <div className="name">Account1</div>
+          <div className="name"
+            onClick={async () => {
+              const { tabId } = await Helper.getOriginInfo()
+              Messenger.sendMessageToContentScript(tabId!, ADMETA_MSG_EXTENISON_CALL_ADDRESS)
+            }}
+          >Account1</div>
           <div className="account">
             <div className="address">{Helper.formatAddress(account)}</div>
             <div

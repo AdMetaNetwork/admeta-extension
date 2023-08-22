@@ -1,4 +1,4 @@
-import { API } from './config'
+import { API, LINK_HTTP } from './config'
 import { ApiInfo, RequestReq, Params, Domains } from './types'
 import browser from 'webextension-polyfill'
 class Helper {
@@ -38,28 +38,28 @@ class Helper {
   static goWeb(url: string) {
     browser.tabs.create({ url })
   }
-  
+
   static copyTextToClipboard(text: string) {
     //Create a textbox field where we can insert text to. 
     var copyFrom = document.createElement("textarea");
-  
+
     //Set the text content to be the text you wished to copy.
     copyFrom.textContent = text;
-  
+
     //Append the textbox field into the body as a child. 
     //"execCommand()" only works when there exists selected text, and the text is inside 
     //document.body (meaning the text is part of a valid rendered HTML element).
     document.body.appendChild(copyFrom);
-  
+
     //Select all the text!
     copyFrom.select();
-  
+
     //Execute command
     document.execCommand('copy');
-  
+
     //(Optional) De-select the text using blur(). 
     copyFrom.blur();
-  
+
     //Remove the textbox field from the document.body, so no other JavaScript nor 
     //other elements can get access to this.
     document.body.removeChild(copyFrom);
@@ -74,26 +74,26 @@ class Helper {
   static getQueryVariable(variable: string, url: string) {
     let query = new URL(url).search.substring(1)
     let vars = query.split("&");
-    for (let i=0;i<vars.length;i++) {
+    for (let i = 0; i < vars.length; i++) {
       let pair = vars[i].split("=");
-        if(pair[0] == variable){
-          return pair[1]
-        }
+      if (pair[0] == variable) {
+        return pair[1]
+      }
     }
     return '';
   }
 
   static isInWhiteList(whiteList: Domains[], url: string) {
-		return whiteList.some((v) => {
-			return url.includes(v.name.toLowerCase())
-		})
-	}
+    return whiteList.some((v) => {
+      return url.includes(v.name.toLowerCase())
+    })
+  }
 
   static currentDomainIdx(whiteList: Domains[], url: string) {
-		return whiteList.findIndex((v) => {
-			return url.includes(v.name.toLowerCase())
-		})
-	}
+    return whiteList.findIndex((v) => {
+      return url.includes(v.name.toLowerCase())
+    })
+  }
 
   static currentDate() {
     const date = new Date()
@@ -103,7 +103,34 @@ class Helper {
 
     return `${y}-${m}-${d}`
   }
-  
+
+  static async getOriginInfo() {
+    const tabs = await browser.tabs.query({})
+    const origin = new URL(LINK_HTTP).host
+    const exsitIndex = tabs.findIndex((item) => {
+      return new URL(item.url!).host === origin
+    })
+
+    return {
+      tabId: tabs[exsitIndex].id,
+      url: tabs[exsitIndex].url
+    }
+  }
+
+  static async checkOriginIsExist() {
+    const tabs = await browser.tabs.query({})
+    const origin = new URL(LINK_HTTP).host
+    const exsitIndex = tabs.findIndex((item) => {
+      return new URL(item.url!).host === origin
+    })
+    if (exsitIndex !== -1) {
+      console.log(exsitIndex, tabs[exsitIndex].url, tabs[exsitIndex].id)
+      browser.tabs.update(tabs[exsitIndex].id, { active: true })
+    } else {
+      browser.tabs.create({ url: LINK_HTTP })
+    }
+  }
+
 }
 
 
