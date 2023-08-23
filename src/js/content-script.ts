@@ -76,7 +76,6 @@ class ContentScript {
         if (!storage) return
         const obj = JSON.parse(storage)
         const account = obj.state.data.account
-        console.log(account, 99889)
         Messenger.sendMessageToBackground(ADMETA_MSG_ACCOUNT, { account, balance: 0 })
         break;
 

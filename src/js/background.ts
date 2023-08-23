@@ -296,7 +296,7 @@ class Background {
         if (changeInfo.status === 'complete') {
           this.searchKeyWordAd(tabId, tab)
           this.reportBroswer(tab)
-          this.getTabLength(tab)
+          // this.getTabLength(tab)
         }
       }
     );

@@ -21,7 +21,7 @@ const Home: FC = () => {
   useEffect(() => {
     browser.storage.local.get(['ext_status', 'account', 'balance']).then(({ ext_status, account, balance }) => {
       setOpenExt(ext_status)
-      setAccount(account || '0x...')
+      setAccount(account || '')
       setBalance(balance || '0')
     });
   }, [])
@@ -31,7 +31,26 @@ const Home: FC = () => {
       const { tabId } = await Helper.getOriginInfo()
       if (!tabId) return
       const { score } = await browser.storage.local.get(['score'])
-      console.log(tabId, score)
+      console.log(JSON.stringify({
+        AI: 0,
+        DID: 0,
+        DeFi: 0,
+        GameFi: 0,
+        Metaverse: 0,
+        NFT: 0,
+        OnChainData: 0
+      }))
+      if (JSON.stringify(score) === JSON.stringify({
+        AI: 0,
+        DID: 0,
+        DeFi: 0,
+        GameFi: 0,
+        Metaverse: 0,
+        NFT: 0,
+        OnChainData: 0
+      })) {
+        return
+      }
 
       Messenger.sendMessageToContentScript(tabId, ADMETA_MSG_SYNCDATA_TO_CONTENT, score)
       browser.storage.local.set({
@@ -68,24 +87,36 @@ const Home: FC = () => {
       <div className="account-wrp">
         <div className="left"></div>
         <div className="right">
-          <div className="name"
-            onClick={async () => {
-              const { tabId } = await Helper.getOriginInfo()
-              Messenger.sendMessageToContentScript(tabId!, ADMETA_MSG_EXTENISON_CALL_ADDRESS)
-            }}
-          >Account1</div>
-          <div className="account">
-            <div className="address">{Helper.formatAddress(account)}</div>
-            <div
-              className="copy"
-              onClick={() => {
-                Helper.copyTextToClipboard(account)
-                alert('Copied!')
-              }}
-            >
-              <Copy />
-            </div>
-          </div>
+          <div className="name">Account1</div>
+          {
+            account
+              ?
+              <div className="account">
+                <div className="address">{Helper.formatAddress(account)}</div>
+                <div
+                  className="copy"
+                  onClick={() => {
+                    Helper.copyTextToClipboard(account)
+                    alert('Copied!')
+                  }}
+                >
+                  <Copy />
+                </div>
+              </div>
+              :
+              <div
+                className="address"
+                style={{ color: 'blue' }}
+                onClick={async () => {
+                  const { tabId } = await Helper.getOriginInfo()
+                  await Messenger.sendMessageToContentScript(tabId!, ADMETA_MSG_EXTENISON_CALL_ADDRESS)
+                  browser.storage.local.get(['account']).then(({ account }) => {
+                    setAccount(account || '')
+                  })
+                }}
+              >Sync Address</div>
+          }
+
         </div>
       </div>
       <div className="blance-wrp">

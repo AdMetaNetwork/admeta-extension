@@ -59,14 +59,14 @@ export const pushAdCard = (type: 'PICTURE' | 'VIDEO', link: string, imgUrl: stri
 
   document.body.appendChild(ui);
 
-  img.addEventListener('mouseenter', () => {
+  ui.addEventListener('mouseover', () => {
     footer.style.transition = 'bottom .5s'
     footer.style.bottom = '0px'
     close.style.transition = 'top .5s'
     close.style.top = '8px'
   })
 
-  img.addEventListener('mouseleave', () => {
+  ui.addEventListener('mouseleave', () => {
     footer.style.transition = 'bottom .5s'
     footer.style.bottom = '-28px'
     close.style.transition = 'top .5s'
