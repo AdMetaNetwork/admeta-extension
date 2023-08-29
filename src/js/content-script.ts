@@ -1,6 +1,6 @@
 import browser from 'webextension-polyfill'
 import Messenger from "./messenger";
-import { ADMETA_MSG_AD_PUSH, ADMETA_MSG_NFT_PUSH, ADMETA_MSG_NFT_CLAIM, ADMETA_MSG_EXTENISON_CALL_ADDRESS, ADMETA_MSG_SYNCDATA_TO_CONTENT, ADMETA_MSG_ACCOUNT } from './config'
+import { ADMETA_MSG_AD_PUSH, ADMETA_MSG_NFT_PUSH, ADMETA_MSG_NFT_CLAIM, ADMETA_MSG_EXTENISON_CALL_ADDRESS, ADMETA_MSG_SYNCDATA_TO_CONTENT, ADMETA_MSG_ACCOUNT, API } from './config'
 import { pushAdCard, pushNftCard, pushClaimCard } from './ui'
 import Helper from './helper';
 class ContentScript {
@@ -90,12 +90,48 @@ class ContentScript {
     })
   }
 
+  listenWebComplete() {
+    const url = location.href
+    if (!url.includes('litentry')) return
+    // complete dom
+    const subBtn = document.querySelector('.button-outline-infrstructure')
+
+    subBtn?.addEventListener("click", function (event) {
+      console.log("Clicked element:", event.target);
+      // 这里可以添加你的其他逻辑
+      const timer = setTimeout(() => {
+        // @ts-ignore
+        const success = document.querySelector('.success-message').style.display || ''
+        if (success && success === 'block') {
+          const address = Helper.getUrlParameter('address')
+          const platform = Helper.getUrlParameter('platform')
+          Helper.apiCall({
+            URI: `admeta/overwriteCompletedRecord`,
+            full_url: false,
+            method: 'POST',
+            params: {
+              address,
+              platform
+            }
+          }).then((v) => {
+            console.log(v)
+          })
+          clearTimeout(timer)
+        }
+      }, 5000)
+    });
+
+  }
+
   init() {
     // Listen for messages from background and run the listener from the map
     this.listenForMessages();
 
     // Listen for messages from web page
     this.listenWebPageMessages();
+
+    // Listen web click
+    this.listenWebComplete()
   }
 
 }

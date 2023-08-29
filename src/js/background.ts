@@ -1,10 +1,9 @@
 import browser from 'webextension-polyfill'
 import { Account, Domain, ExtStatus, ScanDomain, DataConfig, Domains } from "./types";
 import Messenger from "./messenger";
-import { ADMETA_MSG_ACCOUNT, ADMETA_MSG_AD_PUSH, ADMETA_MSG_DOMAIN, ADMETA_MSG_SWITCH, DOMAIN_CONFIG_URL, ADMETA_MSG_NFT_PUSH, NFT_RECOMMOND, ADMETA_MSG_NFT_CLAIM, TEST_ACCOUNT, RPC, CONTRACT_ADDRESS, REPORTING_TIME, OPEN_TAB_NUMBER, ADMETA_MSG_EVM } from './config'
+import { ADMETA_MSG_ACCOUNT, ADMETA_MSG_AD_PUSH, ADMETA_MSG_DOMAIN, ADMETA_MSG_SWITCH, DOMAIN_CONFIG_URL, ADMETA_MSG_NFT_PUSH, NFT_RECOMMOND, ADMETA_MSG_NFT_CLAIM, TEST_ACCOUNT, RPC, REPORTING_TIME, OPEN_TAB_NUMBER } from './config'
 import Helper from './helper';
 import { BigNumber, ethers } from 'ethers'
-import { abi } from "./abi";
 import WHITE_LIST from './white-list';
 
 class Background {
@@ -49,11 +48,22 @@ class Background {
   initEVM() {
     const provider = new ethers.providers.JsonRpcProvider(RPC);
     // test call wallet
-    const w = ethers.Wallet.fromMnemonic(TEST_ACCOUNT);
-    const p = w.privateKey;
-    const wallet = new ethers.Wallet(p, provider);
-    const c = new ethers.Contract(CONTRACT_ADDRESS, abi, wallet);
-    this.contract = c.connect(wallet)
+    Helper.apiCall({
+      URI: `admeta/getContractVersion`,
+      full_url: false,
+      method: 'POST',
+      params: {}
+    }).then((v) => {
+      v.json().then((r) => {
+        console.log(r)
+        const w = ethers.Wallet.fromMnemonic(TEST_ACCOUNT);
+        const p = w.privateKey;
+        const wallet = new ethers.Wallet(p, provider);
+        const c = new ethers.Contract(r.address, r.abi, wallet);
+        this.contract = c.connect(wallet)
+      })
+    })
+
   }
 
   listenInstall() {
@@ -259,10 +269,10 @@ class Background {
       );
     }
     if (q === 'web3go' || q === 'ai') {
-      this.callEVM(tabId)
+      this.callEVM(tabId, 5)
     }
     if (q === 'did' || q === 'litentry') {
-      this.callEVM(tabId)
+      this.callEVM(tabId, 4)
     }
     if (q === 'nft' || q === 'opensea') {
       Messenger.sendMessageToContentScript(
@@ -312,18 +322,32 @@ class Background {
     this.callEVM(tabId)
   }
 
-  async callEVM(tabId: number) {
+  // checkValue(tag: number, obj: Record<string, any>, threshold: Record<string, any>) {
+  //   if (tag === threshold.tag) {
+  //     if (obj[threshold.property] < threshold.value) {
+  //       return;
+  //     }
+  //   }
+  // }
+
+  async callEVM(tabId: number, tag: number = 0) {
     const { account } = await browser.storage.local.get(['account'])
     console.log(account)
     // get user tag score
     const useScore = await this.contract?.getUserLevel(account)
-    console.log(JSON.parse(useScore.categoryScores))
+    console.log(JSON.parse(useScore.categoryScores), 'ssss--->>>')
     const obj = JSON.parse(useScore.categoryScores)
-    if (obj.AI < 100) {
-      return
+    if (tag === 4) {
+      if (obj.DID < 100) {
+        return
+      }
     }
-
-    const matchIndex = await this.contract?.matchAd(BigNumber.from(5), account)
+    if (tag === 5) {
+      if (obj.AI < 100) {
+        return
+      }
+    }
+    const matchIndex = await this.contract?.matchAd(BigNumber.from(tag), account)
     console.log(matchIndex)
 
     this.contract?.adInfo(matchIndex).then((b: any) => {
