@@ -12,11 +12,10 @@ export const ADMETA_MSG_SYNCDATA_TO_CONTENT = 'ADMETA_MSG_SYNCDATA_TO_CONTENT'
 
 export const DOMAIN_CONFIG_URL = 'https://raw.githubusercontent.com/AdMetaNetwork/web3-product-categorized-list/main/web3-product-list.json'
 
-// export const LINK_HTTP = 'http://localhost:3000/'
+// export const LINK_HTTP = 'http://localhost:3001/'
 export const LINK_HTTP = 'https://app.admeta.network/'
 
 export const TEST_ACCOUNT = 'frozen captain slender cat multiply small okay cruise stone virus aim learn'
-export const CONTRACT_ADDRESS = '0x34Efa1dEDd98afC37A2C5674Cfb73994058Ec20F'
 export const RPC = 'https://eth-sepolia-public.unifra.io'
 // browser 2 minutes report
 export const REPORTING_TIME = 1000 * 10

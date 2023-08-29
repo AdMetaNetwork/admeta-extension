@@ -17,7 +17,7 @@ export const pushAdCard = (type: 'PICTURE' | 'VIDEO', link: string, imgUrl: stri
     if (type === 'VIDEO') {
       window.open(`${LINK_HTTP}play?video=${encodeURIComponent(link)}&id=${id}&add=${address}`)
     } else {
-      window.open(`${link}?id=${id}&add=${address}`)
+      window.open(`${link}`)
     }
     document.body.removeChild(ui)
   })
