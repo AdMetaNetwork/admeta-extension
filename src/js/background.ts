@@ -322,14 +322,6 @@ class Background {
     this.callEVM(tabId)
   }
 
-  // checkValue(tag: number, obj: Record<string, any>, threshold: Record<string, any>) {
-  //   if (tag === threshold.tag) {
-  //     if (obj[threshold.property] < threshold.value) {
-  //       return;
-  //     }
-  //   }
-  // }
-
   async callEVM(tabId: number, tag: number = 0) {
     const { account } = await browser.storage.local.get(['account'])
     console.log(account)
