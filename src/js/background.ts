@@ -255,9 +255,6 @@ class Background {
     const { account } = await browser.storage.local.get(['account'])
     const q = this.getBroswerSearch(tab.url || '')
     if (q === 'admeta') {
-      console.log(this.advertisements[0], '00000')
-
-      this.advertisements[0].callbackLink = this.advertisements[0].callbackLink + '?announcer=0x8899B50613AB56F4D21ff5407d3f16AdF5fce884&ad_index=1'
       Messenger.sendMessageToContentScript(
         tabId,
         ADMETA_MSG_AD_PUSH,
